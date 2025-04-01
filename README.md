@@ -5,6 +5,8 @@
 
 ✨ A Flutter plugin that lets you create Android pinned shortcuts with style! Pin your app's most important features directly to the user's home screen.
 
+![pinned-shortcuts](https://github.com/user-attachments/assets/8fd0fdf2-99e3-4d7d-8dbd-1708748e8400)
+
 
 ## ✅ Features
 
