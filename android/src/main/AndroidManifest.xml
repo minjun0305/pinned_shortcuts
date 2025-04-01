@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.lkrjangid.flutter_pinned_shortcuts">
+  package="com.lkrjangid.pinned_shortcuts">
     <!-- Permission for network image downloads -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Permission required for pinned shortcuts -->

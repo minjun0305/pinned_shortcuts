@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 /// Main class for the Flutter Pinned Shortcuts plugin.
 class FlutterPinnedShortcuts {
   static const MethodChannel _channel =
-      MethodChannel('flutter_pinned_shortcuts');
+      MethodChannel('pinned_shortcuts');
 
   static final StreamController<Map> _shortcutClickController =
       StreamController<Map>.broadcast();

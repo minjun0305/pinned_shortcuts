@@ -1,4 +1,4 @@
-package com.lkrjangid.flutter_pinned_shortcuts
+package com.lkrjangid.pinned_shortcuts
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

@@ -1,4 +1,4 @@
-package com.lkrjangid.flutter_pinned_shortcuts
+package com.lkrjangid.pinned_shortcuts
 
 import android.app.Activity
 import android.content.Context
@@ -40,8 +40,8 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
 
     companion object {
         private const val TAG = "PinnedShortcutsPlugin"
-        private const val CHANNEL = "flutter_pinned_shortcuts"
-        private const val SHORTCUT_CLICKED_ACTION = "com.lkrjangid.flutter_pinned_shortcuts.SHORTCUT_CLICKED"
+        private const val CHANNEL = "pinned_shortcuts"
+        private const val SHORTCUT_CLICKED_ACTION = "com.lkrjangid.pinned_shortcuts.SHORTCUT_CLICKED"
         private const val EXTRA_SHORTCUT_ID = "shortcut_id"
         private const val EXTRA_SHORTCUT_DATA = "shortcut_data"
 

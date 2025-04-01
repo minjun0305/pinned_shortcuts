@@ -1,4 +1,4 @@
-package com.lkrjangid.flutter_pinned_shortcuts
+package com.lkrjangid.pinned_shortcuts
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -11,7 +11,7 @@ import org.json.JSONObject
 class FlutterPinnedShortcutsSettings(context: Context) {
     companion object {
         private const val TAG = "ShortcutsSettings"
-        private const val PREFS_NAME = "flutter_pinned_shortcuts"
+        private const val PREFS_NAME = "pinned_shortcuts"
         private const val KEY_SHORTCUTS = "shortcuts"
     }
 

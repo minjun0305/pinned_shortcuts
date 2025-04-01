@@ -1,6 +1,6 @@
 # Flutter Pinned Shortcuts 📌
 
-[![Pub](https://img.shields.io/pub/v/flutter_pinned_shortcuts.svg)](https://pub.dev/packages/flutter_pinned_shortcuts)
+[![Pub](https://img.shields.io/pub/v/pinned_shortcuts.svg)](https://pub.dev/packages/pinned_shortcuts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ✨ A Flutter plugin that lets you create Android pinned shortcuts with style! Pin your app's most important features directly to the user's home screen.
@@ -28,7 +28,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_pinned_shortcuts: any
+  pinned_shortcuts: any
 ```
 
 Then run:
@@ -59,7 +59,7 @@ For optimal functionality, Android 8.0 (API level 26) or higher is recommended.
 First, initialize the plugin (typically in your `main.dart`):
 
 ```dart
-import 'package:flutter_pinned_shortcuts/flutter_pinned_shortcuts.dart';
+import 'package:pinned_shortcuts/pinned_shortcuts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
