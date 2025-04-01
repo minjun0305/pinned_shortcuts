@@ -70,6 +70,9 @@ class FlutterPinnedShortcuts {
   /// - [imageSourceType]: Type of image source (asset, resource, network, file)
   /// - [longLabel]: Optional longer description for the shortcut
   /// - [extraData]: Optional data to be passed back when shortcut is clicked
+  /// - [adaptiveIconForeground]: Optional foreground image for adaptive icon (Android 8.0+)
+  /// - [adaptiveIconBackground]: Optional background color or image for adaptive icon (Android 8.0+)
+  /// - [adaptiveIconBackgroundType]: Type of background (color or image)
   static Future<bool> createPinnedShortcut({
     required String id,
     required String label,
@@ -77,10 +80,14 @@ class FlutterPinnedShortcuts {
     required ImageSourceType imageSourceType,
     String? longLabel,
     Map<String, dynamic>? extraData,
+    String? adaptiveIconForeground,
+    String? adaptiveIconBackground,
+    AdaptiveIconBackgroundType adaptiveIconBackgroundType = AdaptiveIconBackgroundType.color,
   }) async {
     try {
       debugPrint('Creating pinned shortcut: $id');
       String? finalImagePath = imageSource;
+      String? finalForegroundPath;
 
       // Handle different image source types
       if (imageSourceType == ImageSourceType.network) {
@@ -89,6 +96,15 @@ class FlutterPinnedShortcuts {
       } else if (imageSourceType == ImageSourceType.asset) {
         // No additional processing needed for assets
         // as they will be handled by the native side
+      }
+
+      // Handle adaptive icon foreground if provided
+      if (adaptiveIconForeground != null) {
+        if (imageSourceType == ImageSourceType.network) {
+          finalForegroundPath = await _downloadImage(adaptiveIconForeground, "${id}_fg");
+        } else {
+          finalForegroundPath = adaptiveIconForeground;
+        }
       }
 
       final result = await _channel.invokeMethod<bool>(
@@ -100,6 +116,10 @@ class FlutterPinnedShortcuts {
           'imageSource': finalImagePath,
           'imageSourceType': imageSourceType.name,
           'extraData': extraData != null ? jsonEncode(extraData) : null,
+          'useAdaptiveIcon': adaptiveIconForeground != null,
+          'adaptiveIconForeground': finalForegroundPath,
+          'adaptiveIconBackground': adaptiveIconBackground,
+          'adaptiveIconBackgroundType': adaptiveIconBackgroundType.name,
         },
       );
 
@@ -170,4 +190,13 @@ enum ImageSourceType {
 
   /// Image from a file path
   file
+}
+
+/// Enum for different types of adaptive icon backgrounds
+enum AdaptiveIconBackgroundType {
+  /// Color value (e.g. #FFFFFF or #AARRGGBB)
+  color,
+
+  /// Image source (same type as the main imageSourceType)
+  image
 }

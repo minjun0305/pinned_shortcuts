@@ -7,10 +7,14 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.util.Log
 import androidx.annotation.NonNull
+import androidx.annotation.RequiresApi
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -138,11 +142,18 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                 val imageSourceType = call.argument<String>("imageSourceType") ?: "asset"
                 val extraDataString = call.argument<String>("extraData")
 
-                Log.d(TAG, "Creating shortcut: $id, type: $imageSourceType")
+                // Adaptive icon parameters
+                val useAdaptiveIcon = call.argument<Boolean>("useAdaptiveIcon") ?: false
+                val adaptiveIconForeground = call.argument<String>("adaptiveIconForeground")
+                val adaptiveIconBackground = call.argument<String>("adaptiveIconBackground")
+                val adaptiveIconBackgroundType = call.argument<String>("adaptiveIconBackgroundType") ?: "color"
+
+                Log.d(TAG, "Creating shortcut: $id, type: $imageSourceType, useAdaptiveIcon: $useAdaptiveIcon")
 
                 scope.launch {
                     val success = createShortcut(
-                            id, label, longLabel, imageSource, imageSourceType, extraDataString
+                            id, label, longLabel, imageSource, imageSourceType, extraDataString,
+                            useAdaptiveIcon, adaptiveIconForeground, adaptiveIconBackground, adaptiveIconBackgroundType
                     )
                     result.success(success)
                 }
@@ -212,7 +223,11 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
             longLabel: String,
             imageSource: String,
             imageSourceType: String,
-            extraDataString: String?
+            extraDataString: String?,
+            useAdaptiveIcon: Boolean = false,
+            adaptiveIconForeground: String? = null,
+            adaptiveIconBackground: String? = null,
+            adaptiveIconBackgroundType: String = "color"
     ): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -235,17 +250,90 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                 // Don't use CLEAR_TASK flag as it will destroy the activity and may cause issues with the event
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-                // Load the icon based on the source type
-                val icon = loadIconFromSource(imageSource, imageSourceType)
-                        ?: return@withContext false
+                // Load icons based on whether we should use adaptive icons
+                var shortcutInfo: ShortcutInfoCompat? = null
 
-                // Create the shortcut
-                val shortcutInfo = ShortcutInfoCompat.Builder(context, id)
-                        .setShortLabel(label)
-                        .setLongLabel(longLabel)
-                        .setIcon(icon)
-                        .setIntent(intent)
-                        .build()
+                if (useAdaptiveIcon && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && adaptiveIconForeground != null) {
+                    Log.d(TAG, "Using adaptive icon for shortcut")
+
+                    // Load the foreground icon
+                    val foregroundIcon = loadIconFromSource(adaptiveIconForeground, imageSourceType)
+                    if (foregroundIcon == null) {
+                        Log.e(TAG, "Failed to load adaptive icon foreground")
+                        return@withContext false
+                    }
+
+                    // Create shortcut with adaptive icon
+                    val builder = ShortcutInfoCompat.Builder(context, id)
+                            .setShortLabel(label)
+                            .setLongLabel(longLabel)
+                            .setIntent(intent)
+
+                    // Handle the background (either color or image)
+                    if (adaptiveIconBackgroundType == "color" && adaptiveIconBackground != null) {
+                        // Parse color
+                        try {
+                            val backgroundColor = parseColor(adaptiveIconBackground)
+
+                            // Set the adaptive icon
+                            val adaptiveIcon = createAdaptiveIcon(foregroundIcon, backgroundColor)
+                            if (adaptiveIcon != null) {
+                                builder.setIcon(adaptiveIcon)
+                            } else {
+                                // Fallback to regular icon if adaptive icon creation fails
+                                builder.setIcon(foregroundIcon)
+                                Log.w(TAG, "Failed to create adaptive icon, using foreground as fallback")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error parsing background color: ${e.message}")
+                            builder.setIcon(foregroundIcon)
+                        }
+                    } else if (adaptiveIconBackgroundType == "image" && adaptiveIconBackground != null) {
+                        // Load background image
+                        val backgroundIcon = loadIconFromSource(adaptiveIconBackground, imageSourceType)
+
+                        if (backgroundIcon != null) {
+                            // Set the adaptive icon with image background
+                            val adaptiveIcon = createAdaptiveIconWithImageBackground(foregroundIcon, backgroundIcon)
+                            if (adaptiveIcon != null) {
+                                builder.setIcon(adaptiveIcon)
+                            } else {
+                                // Fallback to regular icon if adaptive icon creation fails
+                                builder.setIcon(foregroundIcon)
+                                Log.w(TAG, "Failed to create adaptive icon with image background, using foreground as fallback")
+                            }
+                        } else {
+                            // Fallback to foreground only
+                            builder.setIcon(foregroundIcon)
+                            Log.e(TAG, "Failed to load background image, using foreground only")
+                        }
+                    } else {
+                        // No background specified or invalid type, use transparent background
+                        val adaptiveIcon = createAdaptiveIcon(foregroundIcon, Color.TRANSPARENT)
+                        if (adaptiveIcon != null) {
+                            builder.setIcon(adaptiveIcon)
+                        } else {
+                            builder.setIcon(foregroundIcon)
+                        }
+                    }
+
+                    shortcutInfo = builder.build()
+                } else {
+                    // Use regular (non-adaptive) icon
+                    Log.d(TAG, "Using regular icon for shortcut")
+
+                    // Load the icon based on the source type
+                    val icon = loadIconFromSource(imageSource, imageSourceType)
+                            ?: return@withContext false
+
+                    // Create the shortcut with regular icon
+                    shortcutInfo = ShortcutInfoCompat.Builder(context, id)
+                            .setShortLabel(label)
+                            .setLongLabel(longLabel)
+                            .setIcon(icon)
+                            .setIntent(intent)
+                            .build()
+                }
 
                 // Save shortcut information for future reference
                 val settings = FlutterPinnedShortcutsSettings(context)
@@ -258,26 +346,29 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                         val shortcutManager = context.getSystemService(ShortcutManager::class.java)
 
                         // Convert IconCompat to Icon
-                        val drawable = icon.toIcon(context).loadDrawable(context)
-                        val bitmap = Bitmap.createBitmap(
-                                drawable!!.intrinsicWidth,
-                                drawable.intrinsicHeight,
-                                Bitmap.Config.ARGB_8888
-                        )
+                        val iconCompat = shortcutInfo.icon
+                        if (iconCompat != null) {
+                            val drawable = iconCompat.toIcon(context).loadDrawable(context)
+                            val bitmap = Bitmap.createBitmap(
+                                    drawable!!.intrinsicWidth,
+                                    drawable.intrinsicHeight,
+                                    Bitmap.Config.ARGB_8888
+                            )
 
-                        val canvas = android.graphics.Canvas(bitmap)
-                        drawable.setBounds(0, 0, canvas.width, canvas.height)
-                        drawable.draw(canvas)
+                            val canvas = android.graphics.Canvas(bitmap)
+                            drawable.setBounds(0, 0, canvas.width, canvas.height)
+                            drawable.draw(canvas)
 
-                        val shortcutInfoApi26 = ShortcutInfo.Builder(context, id)
-                                .setShortLabel(label)
-                                .setLongLabel(longLabel)
-                                .setIcon(Icon.createWithBitmap(bitmap))
-                                .setIntent(intent)
-                                .build()
+                            val shortcutInfoApi26 = ShortcutInfo.Builder(context, id)
+                                    .setShortLabel(label)
+                                    .setLongLabel(longLabel)
+                                    .setIcon(Icon.createWithBitmap(bitmap))
+                                    .setIntent(intent)
+                                    .build()
 
-                        shortcutManager?.addDynamicShortcuts(listOf(shortcutInfoApi26))
-                        Log.d(TAG, "Added dynamic shortcut: $id")
+                            shortcutManager?.addDynamicShortcuts(listOf(shortcutInfoApi26))
+                            Log.d(TAG, "Added dynamic shortcut: $id")
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error adding dynamic shortcut: ${e.message}")
                         // Continue with pinned shortcut even if dynamic fails
@@ -294,6 +385,156 @@ class FlutterPinnedShortcutsPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                 e.printStackTrace()
                 return@withContext false
             }
+        }
+    }
+
+    /**
+     * Parse a color string to an integer color value
+     */
+    private fun parseColor(colorString: String): Int {
+        return try {
+            // Handle colors in various formats (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+            if (colorString.startsWith("#")) {
+                return Color.parseColor(colorString)
+            }
+            // Handle named colors
+            else when (colorString.lowercase()) {
+                "red" -> Color.RED
+                "blue" -> Color.BLUE
+                "green" -> Color.GREEN
+                "black" -> Color.BLACK
+                "white" -> Color.WHITE
+                "gray", "grey" -> Color.GRAY
+                "yellow" -> Color.YELLOW
+                "cyan" -> Color.CYAN
+                "magenta" -> Color.MAGENTA
+                "transparent" -> Color.TRANSPARENT
+                else -> {
+                    // Try to parse as int
+                    try {
+                        colorString.toInt()
+                    } catch (e: Exception) {
+                        // Default to transparent if parsing fails
+                        Color.TRANSPARENT
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing color: $colorString, ${e.message}")
+            Color.TRANSPARENT
+        }
+    }
+
+    /**
+     * Create an adaptive icon with a color background
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createAdaptiveIcon(foregroundIcon: IconCompat, backgroundColor: Int): IconCompat? {
+        try {
+            // Get the foreground bitmap
+            val foregroundDrawable = foregroundIcon.toIcon(context).loadDrawable(context)
+            if (foregroundDrawable == null) {
+                Log.e(TAG, "Failed to get foreground drawable")
+                return null
+            }
+
+            // Define the icon size (standard adaptive icon size)
+            val size = 108 // 108dp is the standard adaptive icon size
+
+            // Create foreground bitmap
+            val foregroundBitmap = drawableToBitmap(foregroundDrawable, size, size)
+
+            // Create background bitmap (solid color)
+            val backgroundBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            backgroundBitmap.eraseColor(backgroundColor)
+
+            // Combine the layers into an adaptive icon
+            // For simplicity, we'll create a bitmap with the background and foreground layered
+            val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(result)
+
+            // Draw background
+            canvas.drawBitmap(backgroundBitmap, 0f, 0f, null)
+
+            // Draw foreground centered
+            val left = (size - foregroundBitmap.width) / 2f
+            val top = (size - foregroundBitmap.height) / 2f
+            canvas.drawBitmap(foregroundBitmap, left, top, null)
+
+            // Create icon from the result
+            return IconCompat.createWithAdaptiveBitmap(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating adaptive icon: ${e.message}")
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    /**
+     * Create an adaptive icon with an image background
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createAdaptiveIconWithImageBackground(foregroundIcon: IconCompat, backgroundIcon: IconCompat): IconCompat? {
+        try {
+            // Get drawables
+            val foregroundDrawable = foregroundIcon.toIcon(context).loadDrawable(context)
+            val backgroundDrawable = backgroundIcon.toIcon(context).loadDrawable(context)
+
+            if (foregroundDrawable == null || backgroundDrawable == null) {
+                Log.e(TAG, "Failed to get drawables for adaptive icon")
+                return null
+            }
+
+            // Define the icon size
+            val size = 108 // 108dp is the standard adaptive icon size
+
+            // Create foreground and background bitmaps
+            val foregroundBitmap = drawableToBitmap(foregroundDrawable, size, size)
+            val backgroundBitmap = drawableToBitmap(backgroundDrawable, size, size)
+
+            // Combine the layers
+            val result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(result)
+
+            // Draw background
+            canvas.drawBitmap(backgroundBitmap, 0f, 0f, null)
+
+            // Draw foreground centered
+            val left = (size - foregroundBitmap.width) / 2f
+            val top = (size - foregroundBitmap.height) / 2f
+            canvas.drawBitmap(foregroundBitmap, left, top, null)
+
+            // Create icon from the result
+            return IconCompat.createWithAdaptiveBitmap(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating adaptive icon with image background: ${e.message}")
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    /**
+     * Convert a drawable to a bitmap
+     */
+    private fun drawableToBitmap(drawable: Drawable, width: Int, height: Int): Bitmap {
+        if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
+            // If drawable has no dimensions, create a solid colored bitmap
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            return bitmap
+        } else {
+            // Create a bitmap with the intrinsic dimensions
+            val bitmap = Bitmap.createBitmap(
+                    width,
+                    height,
+                    Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            return bitmap
         }
     }
 

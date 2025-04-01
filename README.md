@@ -14,6 +14,7 @@
     - 🤖 Android resources
     - 🌐 Network images (auto-downloaded)
     - 📂 File paths
+    - 🔀 Support for adaptive icons
 - 👂 Listen to shortcut clicks in Flutter
 - 🔍 Check if a shortcut is pinned
 
@@ -25,7 +26,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_pinned_shortcuts: ^0.0.1
+  flutter_pinned_shortcuts: any
 ```
 
 Then run:
@@ -127,13 +128,43 @@ await FlutterPinnedShortcuts.createPinnedShortcut(
 );
 ```
 
+#### With Adaptive icon with background color
+
+```dart
+await FlutterPinnedShortcuts.createPinnedShortcut(
+  id: 'file_shortcut',
+  label: 'File Shortcut',
+  imageSource: 'https://example.com/image.png', // Legacy fallback
+  imageSourceType: ImageSourceType.network,
+  adaptiveIconForeground: 'https://example.com/image.png',
+  adaptiveIconBackground: '#2196F3', // Material Blue
+  adaptiveIconBackgroundType: AdaptiveIconBackgroundType.color,
+  extraData: {'type': 'adaptive_color'},
+);
+```
+
+#### With Adaptive icon with background image
+
+```dart
+await FlutterPinnedShortcuts.createPinnedShortcut(
+  id: 'file_shortcut',
+  label: 'File Shortcut',
+  imageSource: 'assets/icon.png', // Legacy fallback
+  imageSourceType: ImageSourceType.asset,
+  adaptiveIconForeground: 'assets/icon_foreground.png',
+  adaptiveIconBackground: 'assets/icon_background.png',
+  adaptiveIconBackgroundType: AdaptiveIconBackgroundType.image,
+  extraData: {'type': 'adaptive_color'},
+);
+```
+
 ### 👂 Listen to shortcut clicks
 
 Set up a listener for when shortcuts are clicked:
 
 ```dart
-FlutterPinnedShortcuts.onShortcutClick.listen((shortcutId) {
-  print('🎉 Shortcut clicked: $shortcutId');
+FlutterPinnedShortcuts.onShortcutClick.listen((Map resultData) {
+  debugPrint('🎉 Shortcut clicked: id : ${resultData['id']}, extraData: ${resultData['extraData']}');
   // Handle the shortcut click, e.g., navigate to a specific screen
 });
 ```
@@ -157,108 +188,6 @@ if (isPinned) {
 void dispose() {
   FlutterPinnedShortcuts.dispose();
   super.dispose();
-}
-```
-
-## 📱 Complete Example
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_pinned_shortcuts/flutter_pinned_shortcuts.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize the plugin
-  await FlutterPinnedShortcuts.initialize();
-  
-  runApp(const MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _shortcutStatus = 'No shortcut clicked yet';
-  bool _isSupported = false;
-  final String _shortcutId = 'test_shortcut';
-
-  @override
-  void initState() {
-    super.initState();
-    _checkSupport();
-    _setupShortcutListener();
-  }
-
-  // Check if pinned shortcuts are supported on this device
-  Future<void> _checkSupport() async {
-    final isSupported = await FlutterPinnedShortcuts.isSupported();
-    setState(() {
-      _isSupported = isSupported;
-    });
-  }
-
-  // Set up a listener for shortcut clicks
-  void _setupShortcutListener() {
-    FlutterPinnedShortcuts.onShortcutClick.listen((shortcutId) {
-      setState(() {
-        _shortcutStatus = 'Shortcut clicked: $shortcutId';
-      });
-    });
-  }
-
-  // Create a pinned shortcut with a Flutter asset image
-  Future<void> _createShortcut() async {
-    await FlutterPinnedShortcuts.createPinnedShortcut(
-      id: _shortcutId,
-      label: 'Asset Shortcut',
-      imageSource: 'assets/icon.png',
-      imageSourceType: ImageSourceType.asset,
-      extraData: {'source': 'asset'},
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter Pinned Shortcuts Example'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Pinned Shortcuts ${_isSupported ? 'are supported ✅' : 'are NOT supported ❌'} on this device',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _shortcutStatus,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _isSupported ? _createShortcut : null,
-                child: const Text('Create Shortcut 📌'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    FlutterPinnedShortcuts.dispose();
-    super.dispose();
-  }
 }
 ```
 
@@ -293,7 +222,6 @@ class _MyAppState extends State<MyApp> {
 ## 🔮 Future Plans
 
 - [ ] Support for dynamic shortcuts
-- [ ] Support for adaptive icons
 - [ ] Multiple shortcut creation at once
 - [ ] Improved error handling and reporting
 - [ ] More customization options for shortcut appearance
@@ -327,4 +255,4 @@ Have questions or suggestions? Please open an issue on GitHub!
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/lkrjangid1)
+Made with ❤️ by [Lokesh Jangid](https://github.com/lkrjangid1)

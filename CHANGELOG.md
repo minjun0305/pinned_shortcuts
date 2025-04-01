@@ -12,6 +12,7 @@
     - Network images (with automatic downloading)
     - File paths
 - Listen to shortcut clicks in Flutter
+- Support for adaptive icons
 - Update existing shortcuts
 - Remove shortcuts
 - Check if a shortcut is pinned
