@@ -13,7 +13,7 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -42,11 +42,13 @@ class _MyAppState extends State<MyApp> {
   // Set up a listener for shortcut clicks
   void _setupShortcutListener() {
     // Make sure to keep reference to the subscription to prevent it from being garbage collected
-    final subscription = FlutterPinnedShortcuts.onShortcutClick.listen((Map resultData) {
+    final subscription =
+        FlutterPinnedShortcuts.onShortcutClick.listen((Map resultData) {
       debugPrint('Shortcut click received in Flutter: $resultData');
       if (mounted) {
         setState(() {
-          _shortcutStatus = 'Shortcut clicked: id : ${resultData['id']}, extraData: ${resultData['extraData']}';
+          _shortcutStatus =
+              'Shortcut clicked: id : ${resultData['id']}, extraData: ${resultData['extraData']}';
         });
       }
     });
@@ -158,7 +160,8 @@ class _MyAppState extends State<MyApp> {
           : 'Shortcut $_shortcutId is not pinned';
     });
 
-    debugPrint('Shortcut $_shortcutId is ${isPinned ? "pinned" : "not pinned"}');
+    debugPrint(
+        'Shortcut $_shortcutId is ${isPinned ? "pinned" : "not pinned"}');
   }
 
   @override

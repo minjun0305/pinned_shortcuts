@@ -11,18 +11,17 @@ import 'package:path_provider/path_provider.dart';
 /// Main class for the Flutter Pinned Shortcuts plugin.
 class FlutterPinnedShortcuts {
   static const MethodChannel _channel =
-  MethodChannel('flutter_pinned_shortcuts');
+      MethodChannel('flutter_pinned_shortcuts');
 
   static final StreamController<Map> _shortcutClickController =
-  StreamController<Map>.broadcast();
+      StreamController<Map>.broadcast();
 
   /// Stream for listening to shortcut clicks.
   /// {
   /// "id" : "test_id",
   /// "extraData" : {"data": "input map data"}
   /// }
-  static Stream<Map> get onShortcutClick =>
-      _shortcutClickController.stream;
+  static Stream<Map> get onShortcutClick => _shortcutClickController.stream;
 
   static bool _isInitialized = false;
 
@@ -82,7 +81,8 @@ class FlutterPinnedShortcuts {
     Map<String, dynamic>? extraData,
     String? adaptiveIconForeground,
     String? adaptiveIconBackground,
-    AdaptiveIconBackgroundType adaptiveIconBackgroundType = AdaptiveIconBackgroundType.color,
+    AdaptiveIconBackgroundType adaptiveIconBackgroundType =
+        AdaptiveIconBackgroundType.color,
   }) async {
     try {
       debugPrint('Creating pinned shortcut: $id');
@@ -101,7 +101,8 @@ class FlutterPinnedShortcuts {
       // Handle adaptive icon foreground if provided
       if (adaptiveIconForeground != null) {
         if (imageSourceType == ImageSourceType.network) {
-          finalForegroundPath = await _downloadImage(adaptiveIconForeground, "${id}_fg");
+          finalForegroundPath =
+              await _downloadImage(adaptiveIconForeground, "${id}_fg");
         } else {
           finalForegroundPath = adaptiveIconForeground;
         }
@@ -147,7 +148,6 @@ class FlutterPinnedShortcuts {
       return false;
     }
   }
-
 
   /// Download an image from a URL and save it locally
   static Future<String> _downloadImage(String url, String id) async {
