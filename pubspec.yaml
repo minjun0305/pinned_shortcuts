@@ -1,0 +1,27 @@
+name: flutter_pinned_shortcuts
+description: A Flutter plugin for creating and managing Android pinned shortcuts with support for various image types.
+version: 0.0.1
+homepage: https://github.com/lkrjangid1/flutter_pinned_shortcuts
+
+environment:
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=2.5.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_provider: ^2.0.11
+  http: ^0.13.5
+  path: ^1.8.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.lkrjangid.flutter_pinned_shortcuts
+        pluginClass: FlutterPinnedShortcutsPlugin
