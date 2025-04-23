@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -89,23 +89,23 @@ class FlutterPinnedShortcuts {
       String? finalImagePath = imageSource;
       String? finalForegroundPath;
 
-      // Handle different image source types
-      if (imageSourceType == ImageSourceType.network) {
-        // Download and save network image
-        finalImagePath = await _downloadImage(imageSource, id);
-      } else if (imageSourceType == ImageSourceType.asset) {
-        // No additional processing needed for assets
-        // as they will be handled by the native side
-      }
+      // // Handle different image source types
+      // if (imageSourceType == ImageSourceType.network) {
+      //   // Download and save network image
+      //   finalImagePath = await _downloadImage(imageSource, id);
+      // } else if (imageSourceType == ImageSourceType.asset) {
+      //   // No additional processing needed for assets
+      //   // as they will be handled by the native side
+      // }
 
       // Handle adaptive icon foreground if provided
       if (adaptiveIconForeground != null) {
-        if (imageSourceType == ImageSourceType.network) {
-          finalForegroundPath =
-              await _downloadImage(adaptiveIconForeground, "${id}_fg");
-        } else {
+        // if (imageSourceType == ImageSourceType.network) {
+        //   finalForegroundPath =
+        //       await _downloadImage(adaptiveIconForeground, "${id}_fg");
+        // } else {
           finalForegroundPath = adaptiveIconForeground;
-        }
+        // }
       }
 
       final result = await _channel.invokeMethod<bool>(
@@ -149,27 +149,27 @@ class FlutterPinnedShortcuts {
     }
   }
 
-  /// Download an image from a URL and save it locally
-  static Future<String> _downloadImage(String url, String id) async {
-    try {
-      final response = await http.get(Uri.parse(url));
+  // /// Download an image from a URL and save it locally
+  // static Future<String> _downloadImage(String url, String id) async {
+  //   try {
+  //     final response = await http.get(Uri.parse(url));
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to download image: ${response.statusCode}');
-      }
+  //     if (response.statusCode != 200) {
+  //       throw Exception('Failed to download image: ${response.statusCode}');
+  //     }
 
-      final tempDir = await getTemporaryDirectory();
-      final filePath = path.join(tempDir.path, 'pinned_shortcut_$id.png');
+  //     final tempDir = await getTemporaryDirectory();
+  //     final filePath = path.join(tempDir.path, 'pinned_shortcut_$id.png');
 
-      final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
+  //     final file = File(filePath);
+  //     await file.writeAsBytes(response.bodyBytes);
 
-      return filePath;
-    } catch (e) {
-      debugPrint('Error downloading image: $e');
-      rethrow;
-    }
-  }
+  //     return filePath;
+  //   } catch (e) {
+  //     debugPrint('Error downloading image: $e');
+  //     rethrow;
+  //   }
+  // }
 
   /// Dispose resources used by the plugin
   static void dispose() {
@@ -185,8 +185,8 @@ enum ImageSourceType {
   /// Android resource from res folder
   resource,
 
-  /// Image from a network URL
-  network,
+  // /// Image from a network URL
+  // network,
 
   /// Image from a file path
   file

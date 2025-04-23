@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pinned_shortcuts/pinned_shortcuts.dart';
+import 'package:pinned_shortcuts/flutter_pinned_shortcuts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,44 +89,44 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // Create a pinned shortcut with a network image
-  Future<void> _createNetworkShortcut() async {
-    debugPrint('Creating network shortcut: ${_shortcutId}_net');
-    final result = await FlutterPinnedShortcuts.createPinnedShortcut(
-      id: '${_shortcutId}_net',
-      label: 'Network Shortcut',
-      imageSource: 'https://cdn-icons-png.flaticon.com/256/8816/8816518.png',
-      imageSourceType: ImageSourceType.network,
-      extraData: {'source': 'network'},
-    );
+  // // Create a pinned shortcut with a network image
+  // Future<void> _createNetworkShortcut() async {
+  //   debugPrint('Creating network shortcut: ${_shortcutId}_net');
+  //   final result = await FlutterPinnedShortcuts.createPinnedShortcut(
+  //     id: '${_shortcutId}_net',
+  //     label: 'Network Shortcut',
+  //     imageSource: 'https://cdn-icons-png.flaticon.com/256/8816/8816518.png',
+  //     imageSourceType: ImageSourceType.network,
+  //     extraData: {'source': 'network'},
+  //   );
 
-    setState(() {
-      _shortcutStatus = result
-          ? 'Network shortcut created successfully'
-          : 'Failed to create network shortcut';
-    });
-  }
+  //   setState(() {
+  //     _shortcutStatus = result
+  //         ? 'Network shortcut created successfully'
+  //         : 'Failed to create network shortcut';
+  //   });
+  // }
 
-  // Create a pinned shortcut with adaptive icon
-  Future<void> _createAdaptiveShortcut() async {
-    debugPrint('Creating adaptive shortcut: ${_shortcutId}_adaptive');
-    final result = await FlutterPinnedShortcuts.createPinnedShortcut(
-      id: '${_shortcutId}_adaptive',
-      label: 'Adaptive Icon',
-      imageSource: 'https://i.imgur.com/2GDmYA4.png', // Legacy fallback
-      imageSourceType: ImageSourceType.network,
-      adaptiveIconForeground: 'https://i.imgur.com/2GDmYA4.png',
-      adaptiveIconBackground: '#2196F3', // Material Blue
-      adaptiveIconBackgroundType: AdaptiveIconBackgroundType.color,
-      extraData: {'type': 'adaptive_color'},
-    );
+  // // Create a pinned shortcut with adaptive icon
+  // Future<void> _createAdaptiveShortcut() async {
+  //   debugPrint('Creating adaptive shortcut: ${_shortcutId}_adaptive');
+  //   final result = await FlutterPinnedShortcuts.createPinnedShortcut(
+  //     id: '${_shortcutId}_adaptive',
+  //     label: 'Adaptive Icon',
+  //     imageSource: 'https://i.imgur.com/2GDmYA4.png', // Legacy fallback
+  //     imageSourceType: ImageSourceType.network,
+  //     adaptiveIconForeground: 'https://i.imgur.com/2GDmYA4.png',
+  //     adaptiveIconBackground: '#2196F3', // Material Blue
+  //     adaptiveIconBackgroundType: AdaptiveIconBackgroundType.color,
+  //     extraData: {'type': 'adaptive_color'},
+  //   );
 
-    setState(() {
-      _shortcutStatus = result
-          ? 'Adaptive shortcut created successfully'
-          : 'Failed to create adaptive shortcut';
-    });
-  }
+  //   setState(() {
+  //     _shortcutStatus = result
+  //         ? 'Adaptive shortcut created successfully'
+  //         : 'Failed to create adaptive shortcut';
+  //   });
+  // }
 
   // Create a pinned shortcut with adaptive icon with image background
   Future<void> _createAdaptiveImageShortcut() async {
@@ -198,16 +198,16 @@ class _MyAppState extends State<MyApp> {
                   onPressed: _isSupported ? _createResourceShortcut : null,
                   child: const Text('Create Resource Shortcut'),
                 ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _isSupported ? _createNetworkShortcut : null,
-                  child: const Text('Create Network Shortcut'),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _isSupported ? _createAdaptiveShortcut : null,
-                  child: const Text('Create Adaptive Shortcut'),
-                ),
+                // const SizedBox(height: 10),
+                // ElevatedButton(
+                //   onPressed: _isSupported ? _createNetworkShortcut : null,
+                //   child: const Text('Create Network Shortcut'),
+                // ),
+                // const SizedBox(height: 10),
+                // ElevatedButton(
+                //   onPressed: _isSupported ? _createAdaptiveShortcut : null,
+                //   child: const Text('Create Adaptive Shortcut'),
+                // ),
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: _isSupported ? _createAdaptiveImageShortcut : null,
